@@ -1,0 +1,92 @@
+// lib/providers/auth_provider.dart
+// Handles login, logout, and persisting the JWT token securely.
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../models/models.dart';
+import '../services/api_service.dart';
+
+class AuthProvider extends ChangeNotifier {
+  static const _tokenKey = 'vpos_auth_token';
+  static const _storage = FlutterSecureStorage();
+
+  User? _user;
+  Vendor? _vendor;
+  String? _token;
+  bool _isLoading = false;
+  String? _error;
+
+  User? get user => _user;
+  Vendor? get vendor => _vendor;
+  String? get token => _token;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isAuthenticated => _token != null && _user != null;
+
+  ApiService get apiService => ApiService(authToken: _token);
+
+  // Try to restore session from secure storage on app start
+  Future<bool> tryRestoreSession() async {
+    try {
+      final token = await _storage.read(key: _tokenKey);
+      if (token == null) return false;
+
+      // Validate token by fetching user info from API
+      _token = token;
+      // If your API has a /auth/me endpoint, call it here:
+      // final authData = await ApiService(authToken: token).getMe();
+      // _user = authData.user;
+      // _vendor = authData.vendor;
+      // For now, token is restored but user must re-auth if session is stale
+      return true;
+    } catch (e) {
+      await _storage.delete(key: _tokenKey);
+      return false;
+    }
+  }
+
+  Future<bool> login(String username, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response =
+          await ApiService().login(username, password);
+
+      _token = response.token;
+      _user = response.user;
+      _vendor = response.vendor;
+
+      // Store token securely (encrypted on device)
+      await _storage.write(key: _tokenKey, value: _token);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } on ApiException catch (e) {
+      _error = e.message;
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Connection failed. Check your internet connection.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> logout() async {
+    _token = null;
+    _user = null;
+    _vendor = null;
+    await _storage.delete(key: _tokenKey);
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+}

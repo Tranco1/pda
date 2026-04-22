@@ -1,0 +1,2 @@
+http://localhost:3000/api/vendors/verify/69e61c32dd9558625de7c42e
+http://localhost:3000/api/vendors/verify/69e61c32dd9558625de7c42e
