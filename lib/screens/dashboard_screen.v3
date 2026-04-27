@@ -2,7 +2,6 @@
 // The main dashboard: table grid + no-table active orders section.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
@@ -23,28 +22,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Delay slightly to ensure auth provider has finished vendor fetch
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadOrders());
   }
 
   Future<void> _loadOrders() async {
     final auth = context.read<AuthProvider>();
     final orders = context.read<OrdersProvider>();
-
-    // If vendor not loaded yet, wait briefly and retry
-    if (auth.vendor == null) {
-      debugPrint('Dashboard: vendor not ready, retrying in 500ms');
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (!mounted) return;
-    }
-
-    final vendorId = auth.vendor?.id;
-    debugPrint('Dashboard: loading orders for vendorId=$vendorId, numberOfTables=${auth.vendor?.numberOfTables}');
-    if (vendorId == null || vendorId.isEmpty) {
-      debugPrint('Dashboard: no vendorId available');
-      return;
-    }
-    await orders.fetchOrders(auth.apiService, vendorId);
+    if (auth.vendor == null) return;
+    await orders.fetchOrders(auth.apiService, auth.vendor!.id);
   }
 
   void _handleTableTap(
@@ -161,17 +146,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
-
-                  // ── Debug info (remove once working) ─────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text(
-                        'DEBUG: vendor=${vendor?.name}, tables=$numTables, orders=${orders.orders.length}, error=${orders.error}',
-                        style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
-                      ),
-                    ),
-                  ),
 
                   // ── Table grid ────────────────────────────────
                   if (numTables > 0) ...[

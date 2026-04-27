@@ -1,0 +1,1 @@
+ERROR: lib/screens/order_entry_screen.dart:9:1: Error: 'Category' is imported from both 'package:flutter/src/foundation/annotations.dart' and 'package:vpos_dashboard/models/models.dart'. 

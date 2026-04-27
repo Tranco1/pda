@@ -320,15 +320,15 @@ enum OrderStatus {
   }
 }
 
-class ProductCategory {
+class Category {
   final String id;
   final String name;
   final String? description;
   final int sortOrder;
   final String? parentId;
-  final List<ProductCategory> children;
+  final List<Category> children;
 
-  ProductCategory({
+  Category({
     required this.id,
     required this.name,
     this.description,
@@ -339,15 +339,15 @@ class ProductCategory {
 
   bool get hasChildren => children.isNotEmpty;
 
-  factory ProductCategory.fromJson(Map<String, dynamic> json) {
-    return ProductCategory(
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
       description: json['description'],
       sortOrder: json['sortOrder'] ?? 0,
       parentId: json['parentId'],
       children: (json['children'] as List<dynamic>?)
-              ?.map((c) => ProductCategory.fromJson(c as Map<String, dynamic>))
+              ?.map((c) => Category.fromJson(c as Map<String, dynamic>))
               .toList() ??
           [],
     );
@@ -384,23 +384,22 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
-    final allVariants = (json['variants'] as List<dynamic>?)
-            ?.map((v) => ProductVariant.fromJson(v as Map<String, dynamic>))
-            .where((v) => !v.isEmpty) // filter out blank padding entries
-            .toList() ??
-        [];
     return Product(
       id: json['_id'] ?? json['id'] ?? '',
       vendorId: json['vendorId'] ?? '',
       name: json['name'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
-      costPrice:
-          json['costPrice'] != null ? (json['costPrice']).toDouble() : null,
+      costPrice: json['costPrice'] != null
+          ? (json['costPrice']).toDouble()
+          : null,
       stock: json['stock'] ?? 0,
       description: json['description'],
-      shortDesc: json['desc2'] ?? json['shortDesc'], // API uses desc2
+      shortDesc: json['shortDesc'],
       sku: json['sku'] ?? '',
-      variants: allVariants,
+      variants: (json['variants'] as List<dynamic>?)
+              ?.map((v) => ProductVariant.fromJson(v))
+              .toList() ??
+          [],
       isActive: json['isActive'] ?? true,
       categoryId: json['categoryId'],
     );
@@ -408,29 +407,26 @@ class Product {
 }
 
 class ProductVariant {
-  final String name;   // the variant label e.g. "King Prawn"
-  final double priceAdjustment; // added to base product price
+  final String name;
+  final double price;
   final int stock;
   final String sku;
 
   ProductVariant({
     required this.name,
-    required this.priceAdjustment,
+    required this.price,
     required this.stock,
     required this.sku,
   });
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
     return ProductVariant(
-      // API uses "value" as the display label
-      name: (json['value'] ?? json['name'] ?? '').toString().trim(),
-      priceAdjustment: (json['priceAdjustment'] ?? 0).toDouble(),
+      name: json['name'] ?? '',
+      price: (json['price'] ?? 0).toDouble(),
       stock: json['stock'] ?? 0,
       sku: json['sku'] ?? '',
     );
   }
-
-  bool get isEmpty => name.isEmpty;
 }
 
 class AuthResponse {

@@ -1,4 +1,6 @@
 // lib/services/api_service.dart
+// All network calls go here. The app talks to YOUR backend API,
+// never directly to MongoDB Atlas or AWS S3.
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -14,9 +16,15 @@ class ApiException implements Exception {
 }
 
 class ApiService {
+  // ---------------------------------------------------------------
+  // CONFIGURE: Point this to your backend server URL.
+  // In development: http://localhost:3000
+  // In production: https://your-api.yourdomain.com
+  // ---------------------------------------------------------------
   static const String _baseUrl = 'http://localhost:3000';
 
   final String? _authToken;
+
   ApiService({String? authToken}) : _authToken = authToken;
 
   Map<String, String> get _headers {
@@ -56,15 +64,18 @@ class ApiService {
       headers: _headers,
     );
     final data = await _handleResponse(response);
+    // Response shape: { success: true, data: { ...vendor } }
     return Vendor.fromJson(data['data'] ?? data['vendor'] ?? data);
   }
 
   // ─── Orders ────────────────────────────────────────────────────
 
+  /// Fetch all table orders for a vendor
   Future<List<Order>> getOrders(String vendorId, {String? status}) async {
     final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/tableNumber');
     final response = await http.get(uri, headers: _headers);
     final body = await _handleResponse(response);
+    // Response: { success: true, data: { orders: [], groupedByTable: {} } }
     final data = body['data'] ?? body;
     final ordersRaw = data['orders'];
     if (ordersRaw == null) return [];
@@ -73,6 +84,7 @@ class ApiService {
         .toList();
   }
 
+  /// Fetch all online / no-table orders for a vendor
   Future<List<Order>> getNoTableOrders(String vendorId) async {
     final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/OnlineNoTable');
     final response = await http.get(uri, headers: _headers);
@@ -85,7 +97,9 @@ class ApiService {
         .toList();
   }
 
-  Future<List<Order>> getTableOrders(String vendorId, String tableNumber) async {
+  /// Fetch orders for a specific table
+  Future<List<Order>> getTableOrders(
+      String vendorId, String tableNumber) async {
     final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/tableNumber')
         .replace(queryParameters: {'tableNumber': tableNumber});
     final response = await http.get(uri, headers: _headers);
@@ -98,16 +112,18 @@ class ApiService {
         .toList();
   }
 
-  Future<Order> createOrder(String vendorId, Map<String, dynamic> orderData) async {
+  /// Create a new order
+  Future<Order> createOrder(Map<String, dynamic> orderData) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/api/orders/vendor/$vendorId'),
+      Uri.parse('$_baseUrl/api/orders'),
       headers: _headers,
       body: jsonEncode(orderData),
     );
     final data = await _handleResponse(response);
-    return Order.fromJson(data['order'] ?? data['data'] ?? data);
+    return Order.fromJson(data['order'] ?? data);
   }
 
+  /// Update order status
   Future<Order> updateOrderStatus(String orderId, String status) async {
     final response = await http.patch(
       Uri.parse('$_baseUrl/api/orders/$orderId'),
@@ -118,7 +134,9 @@ class ApiService {
     return Order.fromJson(data['order'] ?? data);
   }
 
-  Future<Order> updateOrder(String orderId, Map<String, dynamic> updates) async {
+  /// Update full order (items, table, etc.)
+  Future<Order> updateOrder(
+      String orderId, Map<String, dynamic> updates) async {
     final response = await http.put(
       Uri.parse('$_baseUrl/api/orders/$orderId'),
       headers: _headers,
@@ -130,56 +148,35 @@ class ApiService {
 
   // ─── Categories ────────────────────────────────────────────────
 
-  Future<List<ProductCategory>> getCategories(String vendorId) async {
-    final uri = Uri.parse('$_baseUrl/api/categories/tree')
+  Future<List<Category>> getCategories(String vendorId) async {
+    final uri = Uri.parse('$_baseUrl/api/categories')
         .replace(queryParameters: {'vendorId': vendorId});
     final response = await http.get(uri, headers: _headers);
     final body = await _handleResponse(response);
-    // Response: { success: true, data: [ ...categories ] }
+    // Response: { success: true, data: [ ...categories with children ] }
     final raw = body['data'];
-    if (raw == null || raw is! List) return [];
+    if (raw == null) return [];
     return (raw as List<dynamic>)
-        .map((c) => ProductCategory.fromJson(c as Map<String, dynamic>))
+        .map((c) => Category.fromJson(c as Map<String, dynamic>))
         .toList();
   }
 
   // ─── Products ──────────────────────────────────────────────────
-  // Fetches ALL pages so the full product list is available client-side.
-  // Your API returns 20/page by default; we request 100 to minimise trips.
 
-  Future<List<Product>> getProducts(String vendorId) async {
-    final allProducts = <Product>[];
-    int page = 1;
-    int totalPages = 1;
+  Future<List<Product>> getProducts(String vendorId,
+      {String? categoryId}) async {
+    final queryParams = <String, String>{
+      'vendorId': vendorId,
+      'isActive': 'true',
+    };
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
 
-    do {
-      final uri = Uri.parse('$_baseUrl/api/products/vendor/$vendorId')
-          .replace(queryParameters: {'page': '$page', 'limit': '100'});
+    final uri = Uri.parse('$_baseUrl/api/products')
+        .replace(queryParameters: queryParams);
+    final response = await http.get(uri, headers: _headers);
+    final data = await _handleResponse(response);
 
-      final response = await http.get(uri, headers: _headers);
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw ApiException('Failed to load products',
-            statusCode: response.statusCode);
-      }
-
-      final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-      // Shape: { success, data: { products: [], pagination: { pages } } }
-      final dataField = decoded['data'];
-      if (dataField == null || dataField is! Map) break;
-
-      final productsRaw = (dataField as Map<String, dynamic>)['products'];
-      if (productsRaw == null || productsRaw is! List) break;
-
-      allProducts.addAll((productsRaw as List<dynamic>)
-          .map((p) => Product.fromJson(p as Map<String, dynamic>)));
-
-      final pagination = dataField['pagination'];
-      if (pagination is Map) {
-        totalPages = (pagination['pages'] ?? 1) as int;
-      }
-      page++;
-    } while (page <= totalPages);
-
-    return allProducts;
+    final List<dynamic> productsJson = data['products'] ?? data['data'] ?? [];
+    return productsJson.map((p) => Product.fromJson(p)).toList();
   }
 }

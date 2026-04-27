@@ -54,22 +54,9 @@ class AuthProvider extends ChangeNotifier {
       final response = await ApiService().login(username, password);
       _token = response.token;
       _user = response.user;
-      // Login response vendor lacks numberOfTables — fetch full vendor record
-      _vendor = response.vendor; // partial fallback
-      await _storage.write(key: _tokenKey, value: _token);
+      _vendor = response.vendor; // comes from user.vendor in the response
 
-      final vendorId = _user?.vendorId;
-      debugPrint('vendorId from user: $vendorId');
-      debugPrint('vendor from login response: name=${response.vendor?.name}, numberOfTables=${response.vendor?.numberOfTables}');
-      if (vendorId != null && vendorId.isNotEmpty) {
-        try {
-          final fullVendor = await ApiService(authToken: _token).getVendor(vendorId);
-          debugPrint('full vendor fetched: name=${fullVendor.name}, numberOfTables=${fullVendor.numberOfTables}');
-          _vendor = fullVendor;
-        } catch (e) {
-          debugPrint('Could not fetch full vendor record: $e');
-        }
-      }
+      await _storage.write(key: _tokenKey, value: _token);
 
       _isLoading = false;
       notifyListeners();

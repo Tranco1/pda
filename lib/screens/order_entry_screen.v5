@@ -26,9 +26,8 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
   List<OrderItem> _items = [];
 
   List<Product> _products = [];
-  List<ProductCategory> _categories = [];
+  List<ProductCategory> _categories = []; // top-level parents only
   bool _loadingProducts = true;
-  String? _loadCategoryError;
   String _productSearch = '';
 
   // Two-level selection
@@ -68,36 +67,32 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
 
   Future<void> _loadData() async {
     final auth = context.read<AuthProvider>();
-    if (auth.vendor == null) {
-      setState(() => _loadCategoryError = 'No vendor loaded');
-      return;
-    }
+    if (auth.vendor == null) return;
     final vendorId = auth.vendor!.id;
-    setState(() {
-      _loadingProducts = true;
-      _loadCategoryError = null;
-    });
-
+    setState(() => _loadingProducts = true);
     try {
-      final cats = await auth.apiService.getCategories(vendorId);
-      if (mounted) setState(() => _categories = cats);
-    } catch (e) {
-      if (mounted) setState(() => _loadCategoryError = 'Categories: $e');
-    }
-
-    try {
-      final prods = await auth.apiService.getProducts(vendorId);
-      if (mounted) {
-        setState(() {
-          _products = prods;
-          _loadingProducts = false;
-        });
+      final results = await Future.wait([
+        auth.apiService.getCategories(vendorId),
+        auth.apiService.getProducts(vendorId),
+      ]);
+      final cats = results[0] as List<ProductCategory>;
+      final prods = results[1] as List<Product>;
+      debugPrint('DEBUG categories: ${cats.length}');
+      debugPrint('DEBUG products: ${prods.length}');
+      if (prods.isNotEmpty) {
+        debugPrint('DEBUG first product: ${prods[0].name}, categoryId=${prods[0].categoryId}');
       }
-    } catch (e) {
-      if (mounted) setState(() {
+      if (cats.isNotEmpty) {
+        debugPrint('DEBUG first category id: ${cats[0].id}');
+      }
+      setState(() {
+        _categories = cats;
+        _products = prods;
         _loadingProducts = false;
-        _loadCategoryError = (_loadCategoryError ?? '') + ' | Products: $e';
       });
+    } catch (e, stack) {
+      debugPrint('DEBUG _loadData error: $e\n$stack');
+      setState(() => _loadingProducts = false);
     }
   }
 
@@ -251,7 +246,7 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
       success = await orders.updateOrder(
           auth.apiService, widget.existingOrder!.id, orderData);
     } else {
-      final created = await orders.createOrder(auth.apiService, vendor.id, orderData);
+      final created = await orders.createOrder(auth.apiService, orderData);
       success = created != null;
     }
 
@@ -358,16 +353,7 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
                   ),
                 ),
 
-                if (_loadCategoryError != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    child: Text(
-                      _loadCategoryError!,
-                      style: TextStyle(fontSize: 11, color: Colors.red.shade700),
-                    ),
-                  ),
-
-                if (_categories.isNotEmpty) ...[
+                if (!_loadingProducts && _categories.isNotEmpty) ...[
                   // ── Parent category chips ──────────────────────
                   SizedBox(
                     height: 40,
@@ -430,6 +416,17 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
                   ],
                   const SizedBox(height: 6),
                 ],
+
+                // DEBUG — remove once working
+                if (!_loadingProducts)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                    child: Text(
+                      'DEBUG: ${_products.length} products loaded, ${_categories.length} categories, '
+                      'filter="${_selectedParent?.name ?? "All"}" → ${_filteredProducts.length} shown',
+                      style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
+                    ),
+                  ),
 
                 // Product count label
                 if (!_loadingProducts)

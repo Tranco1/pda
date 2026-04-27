@@ -63,9 +63,9 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   Future<Order?> createOrder(
-      ApiService api, String vendorId, Map<String, dynamic> orderData) async {
+      ApiService api, Map<String, dynamic> orderData) async {
     try {
-      final created = await api.createOrder(vendorId, orderData);
+      final created = await api.createOrder(orderData);
       if (created.tableNumber.isEmpty) {
         _noTableOrders.add(created);
       } else {
