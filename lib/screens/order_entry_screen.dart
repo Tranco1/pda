@@ -94,10 +94,12 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         _loadingProducts = false;
-        _loadCategoryError = (_loadCategoryError ?? '') + ' | Products: $e';
+        _loadCategoryError = '${_loadCategoryError ?? ''} | Products: $e';
       });
+      }
     }
   }
 
@@ -249,7 +251,7 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
     bool success;
     if (widget.existingOrder != null) {
       success = await orders.updateOrder(
-          auth.apiService, widget.existingOrder!.id, orderData);
+          auth.apiService, vendor.id, widget.existingOrder!.id, orderData);
     } else {
       final created = await orders.createOrder(auth.apiService, vendor.id, orderData);
       success = created != null;

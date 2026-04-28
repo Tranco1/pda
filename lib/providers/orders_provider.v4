@@ -81,9 +81,9 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   Future<bool> updateOrderStatus(
-      ApiService api, String vendorId, String orderId, String status) async {
+      ApiService api, String orderId, String status) async {
     try {
-      final updated = await api.updateOrderStatus(vendorId, orderId, status);
+      final updated = await api.updateOrderStatus(orderId, status);
       _replaceOrder(updated);
       return true;
     } on ApiException catch (e) {
@@ -94,9 +94,9 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   Future<bool> updateOrder(
-      ApiService api, String vendorId, String orderId, Map<String, dynamic> updates) async {
+      ApiService api, String orderId, Map<String, dynamic> updates) async {
     try {
-      final updated = await api.updateOrder(vendorId, orderId, updates);
+      final updated = await api.updateOrder(orderId, updates);
       _replaceOrder(updated);
       return true;
     } on ApiException catch (e) {

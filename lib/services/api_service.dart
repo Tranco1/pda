@@ -15,6 +15,7 @@ class ApiException implements Exception {
 
 class ApiService {
   static const String _baseUrl = 'http://localhost:3000';
+//  static const String _baseUrl = 'https://vapi-yj8f.onrender.com';
 
   final String? _authToken;
   ApiService({String? authToken}) : _authToken = authToken;
@@ -108,24 +109,24 @@ class ApiService {
     return Order.fromJson(data['order'] ?? data['data'] ?? data);
   }
 
-  Future<Order> updateOrderStatus(String orderId, String status) async {
+  Future<Order> updateOrderStatus(String vendorId, String orderId, String status) async {
     final response = await http.patch(
-      Uri.parse('$_baseUrl/api/orders/$orderId'),
+      Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/$orderId/status'),
       headers: _headers,
       body: jsonEncode({'status': status}),
     );
     final data = await _handleResponse(response);
-    return Order.fromJson(data['order'] ?? data);
+    return Order.fromJson(data['order'] ?? data['data'] ?? data);
   }
 
-  Future<Order> updateOrder(String orderId, Map<String, dynamic> updates) async {
+  Future<Order> updateOrder(String vendorId, String orderId, Map<String, dynamic> updates) async {
     final response = await http.put(
-      Uri.parse('$_baseUrl/api/orders/$orderId'),
+      Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/$orderId'),
       headers: _headers,
       body: jsonEncode(updates),
     );
     final data = await _handleResponse(response);
-    return Order.fromJson(data['order'] ?? data);
+    return Order.fromJson(data['order'] ?? data['data'] ?? data);
   }
 
   // ─── Categories ────────────────────────────────────────────────
@@ -138,7 +139,7 @@ class ApiService {
     // Response: { success: true, data: [ ...categories ] }
     final raw = body['data'];
     if (raw == null || raw is! List) return [];
-    return (raw as List<dynamic>)
+    return (raw)
         .map((c) => ProductCategory.fromJson(c as Map<String, dynamic>))
         .toList();
   }
@@ -170,7 +171,7 @@ class ApiService {
       final productsRaw = (dataField as Map<String, dynamic>)['products'];
       if (productsRaw == null || productsRaw is! List) break;
 
-      allProducts.addAll((productsRaw as List<dynamic>)
+      allProducts.addAll((productsRaw)
           .map((p) => Product.fromJson(p as Map<String, dynamic>)));
 
       final pagination = dataField['pagination'];

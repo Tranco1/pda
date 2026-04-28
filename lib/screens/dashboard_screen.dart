@@ -90,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w700)),
             if (vendor != null)
               Text(
-                '${numTables} tables',
+                '$numTables tables',
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -344,8 +344,8 @@ class _TableButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeColor = const Color(0xFF2E7D32); // green-800
-    final activeLight = const Color(0xFFE8F5E9); // green-50
+    const activeColor = Color(0xFF2E7D32); // green-800
+    const activeLight = Color(0xFFE8F5E9); // green-50
     final emptyColor = theme.colorScheme.surfaceContainerHighest;
     final emptyOnColor = theme.colorScheme.onSurfaceVariant;
 
