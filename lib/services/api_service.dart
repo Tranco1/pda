@@ -14,8 +14,8 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:3000';
-//  static const String _baseUrl = 'https://vapi-yj8f.onrender.com';
+//  static const String _baseUrl = 'http://localhost:3000';
+  static const String _baseUrl = 'https://vapi-yj8f.onrender.com';
 
   final String? _authToken;
   ApiService({String? authToken}) : _authToken = authToken;
