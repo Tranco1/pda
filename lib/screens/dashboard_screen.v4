@@ -90,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: const TextStyle(fontWeight: FontWeight.w700)),
             if (vendor != null)
               Text(
-                '${numTables} tables',
+                '$numTables tables',
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -316,92 +316,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
 
-                  // ── Closed Orders ─────────────────────────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Closed Orders',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          if (orders.closedOrders.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.secondaryContainer,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${orders.closedOrders.length}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: theme.colorScheme.onSecondaryContainer,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  if (orders.closedOrders.isEmpty)
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerHighest
-                                .withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'No closed orders today',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: theme.colorScheme.onSurfaceVariant),
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (ctx, index) {
-                            final order = orders.closedOrders[index];
-                            return _NoTableOrderCard(
-                              order: order,
-                              currencyFormat: currencyFormat,
-                              onTap: () {
-                                Navigator.of(context)
-                                    .push(MaterialPageRoute(
-                                      builder: (_) => OrderListScreen(
-                                        tableNumber: order.tableNumber,
-                                        tableLabel: order.tableNumber.isEmpty
-                                            ? 'Online / Takeaway'
-                                            : 'Table ${order.tableNumber}',
-                                        singleOrderId: order.id,
-                                      ),
-                                    ))
-                                    .then((_) => _loadOrders());
-                              },
-                            );
-                          },
-                          childCount: orders.closedOrders.length,
-                        ),
-                      ),
-                    ),
-
                   const SliverToBoxAdapter(child: SizedBox(height: 32)),
                 ],
               ),
@@ -430,8 +344,8 @@ class _TableButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final activeColor = const Color(0xFF2E7D32); // green-800
-    final activeLight = const Color(0xFFE8F5E9); // green-50
+    const activeColor = Color(0xFF2E7D32); // green-800
+    const activeLight = Color(0xFFE8F5E9); // green-50
     final emptyColor = theme.colorScheme.surfaceContainerHighest;
     final emptyOnColor = theme.colorScheme.onSurfaceVariant;
 

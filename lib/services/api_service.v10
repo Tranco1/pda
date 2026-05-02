@@ -86,18 +86,6 @@ class ApiService {
         .toList();
   }
 
-  Future<List<Order>> getClosedOrders(String vendorId) async {
-    final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId')
-        .replace(queryParameters: {'status': 'closed'});
-    final response = await http.get(uri, headers: _headers);
-    final body = await _handleResponse(response);
-    final data = body['data'] ?? body;
-    final ordersRaw = data['orders'] ?? data;
-    if (ordersRaw == null || ordersRaw is! List) return [];
-    return (ordersRaw as List<dynamic>)
-        .map((o) => Order.fromJson(o as Map<String, dynamic>))
-        .toList();
-  }
   Future<List<Order>> getTableOrders(String vendorId, String tableNumber) async {
     final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId/tableNumber')
         .replace(queryParameters: {'tableNumber': tableNumber});
@@ -151,7 +139,7 @@ class ApiService {
     // Response: { success: true, data: [ ...categories ] }
     final raw = body['data'];
     if (raw == null || raw is! List) return [];
-    return (raw as List<dynamic>)
+    return (raw)
         .map((c) => ProductCategory.fromJson(c as Map<String, dynamic>))
         .toList();
   }
@@ -183,7 +171,7 @@ class ApiService {
       final productsRaw = (dataField as Map<String, dynamic>)['products'];
       if (productsRaw == null || productsRaw is! List) break;
 
-      allProducts.addAll((productsRaw as List<dynamic>)
+      allProducts.addAll((productsRaw)
           .map((p) => Product.fromJson(p as Map<String, dynamic>)));
 
       final pagination = dataField['pagination'];

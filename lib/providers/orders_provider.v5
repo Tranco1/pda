@@ -1,4 +1,5 @@
 // lib/providers/orders_provider.dart
+// Manages all order data: fetching, grouping by table, creating, updating.
 
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
@@ -7,29 +8,32 @@ import '../services/api_service.dart';
 class OrdersProvider extends ChangeNotifier {
   List<Order> _tableOrders = [];
   List<Order> _noTableOrders = [];
-  List<Order> _closedOrders = [];
   bool _isLoading = false;
   String? _error;
 
   List<Order> get orders => [..._tableOrders, ..._noTableOrders];
   bool get isLoading => _isLoading;
   String? get error => _error;
-  List<Order> get closedOrders => _closedOrders;
 
+  // Returns orders for a specific table
   List<Order> ordersForTable(String tableNumber) {
     return _tableOrders
         .where((o) => o.tableNumber == tableNumber && o.isActive)
         .toList();
   }
 
+  // Returns total value of active orders for a table
   double tableTotalValue(String tableNumber) {
-    return ordersForTable(tableNumber).fold(0.0, (sum, o) => sum + o.total);
+    return ordersForTable(tableNumber)
+        .fold(0.0, (sum, o) => sum + o.total);
   }
 
+  // Returns true if table has any active orders
   bool tableHasActiveOrders(String tableNumber) {
     return ordersForTable(tableNumber).isNotEmpty;
   }
 
+  // Returns online / no-table orders
   List<Order> get noTableOrders => _noTableOrders;
 
   Future<void> fetchOrders(ApiService api, String vendorId) async {
@@ -38,14 +42,13 @@ class OrdersProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Fetch both endpoints in parallel
       final results = await Future.wait([
         api.getOrders(vendorId),
         api.getNoTableOrders(vendorId),
-        api.getClosedOrders(vendorId),
       ]);
       _tableOrders = results[0];
       _noTableOrders = results[1];
-      _closedOrders = results[2];
       _isLoading = false;
       notifyListeners();
     } on ApiException catch (e) {
@@ -82,15 +85,6 @@ class OrdersProvider extends ChangeNotifier {
     try {
       final updated = await api.updateOrderStatus(vendorId, orderId, status);
       _replaceOrder(updated);
-      // If newly closed, move to closed list
-      if (updated.status == OrderStatus.closed) {
-        _tableOrders.removeWhere((o) => o.id == orderId);
-        _noTableOrders.removeWhere((o) => o.id == orderId);
-        if (!_closedOrders.any((o) => o.id == orderId)) {
-          _closedOrders.insert(0, updated);
-        }
-      }
-      notifyListeners();
       return true;
     } on ApiException catch (e) {
       _error = e.message;
@@ -100,10 +94,9 @@ class OrdersProvider extends ChangeNotifier {
   }
 
   Future<bool> updateOrder(
-      ApiService api, String orderId, Map<String, dynamic> updates) async {
+      ApiService api, String vendorId, String orderId, Map<String, dynamic> updates) async {
     try {
-      final updated = await api.updateOrder(
-          updates['vendorId'] ?? '', orderId, updates);
+      final updated = await api.updateOrder(vendorId, orderId, updates);
       _replaceOrder(updated);
       return true;
     } on ApiException catch (e) {
@@ -120,8 +113,6 @@ class OrdersProvider extends ChangeNotifier {
     } else {
       final nIdx = _noTableOrders.indexWhere((o) => o.id == updated.id);
       if (nIdx != -1) _noTableOrders[nIdx] = updated;
-      final cIdx = _closedOrders.indexWhere((o) => o.id == updated.id);
-      if (cIdx != -1) _closedOrders[cIdx] = updated;
     }
     notifyListeners();
   }

@@ -289,8 +289,7 @@ enum OrderStatus {
   completed,
   cancelled,
   held,
-  refunded,
-  closed;
+  refunded;
 
   static OrderStatus fromString(String s) {
     return OrderStatus.values.firstWhere(
@@ -317,8 +316,6 @@ enum OrderStatus {
         return 'Held';
       case OrderStatus.refunded:
         return 'Refunded';
-      case OrderStatus.closed:
-        return 'Closed';
     }
   }
 }

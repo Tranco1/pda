@@ -1,6 +1,8 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
 project(runner LANGUAGES CXX)
+# Force Skia software renderer for OpenGL 2.1 hardware
+set(ENV{LIBGL_ALWAYS_SOFTWARE} 1)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.

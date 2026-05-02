@@ -251,7 +251,8 @@ class _OrderEntryScreenState extends State<OrderEntryScreen> {
     bool success;
     if (widget.existingOrder != null) {
       success = await orders.updateOrder(
-          auth.apiService, vendor.id, widget.existingOrder!.id, orderData);
+//          auth.apiService, vendor.id, widget.existingOrder!.id, orderData);
+          auth.apiService, widget.existingOrder!.id, orderData);
     } else {
       final created = await orders.createOrder(auth.apiService, vendor.id, orderData);
       success = created != null;
