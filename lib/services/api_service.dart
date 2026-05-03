@@ -14,8 +14,8 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-//  static const String _baseUrl = 'http://localhost:3000';
-  static const String _baseUrl = 'https://vapi-yj8f.onrender.com';
+  static const String _baseUrl = 'http://localhost:3000';
+//  static const String _baseUrl = 'https://vapi-yj8f.onrender.com';
 
   final String? _authToken;
   ApiService({String? authToken}) : _authToken = authToken;
@@ -88,7 +88,7 @@ class ApiService {
 
   Future<List<Order>> getClosedOrders(String vendorId) async {
     final uri = Uri.parse('$_baseUrl/api/orders/vendor/$vendorId')
-        .replace(queryParameters: {'status': 'closed'});
+        .replace(queryParameters: {'status': 'completed'});
     final response = await http.get(uri, headers: _headers);
     final body = await _handleResponse(response);
     final data = body['data'] ?? body;

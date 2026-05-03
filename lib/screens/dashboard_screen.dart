@@ -163,15 +163,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
 
                   // ── Debug info (remove once working) ─────────
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Text(
-                        'DEBUG: vendor=${vendor?.name}, tables=$numTables, orders=${orders.orders.length}, error=${orders.error}',
-                        style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
-                      ),
-                    ),
-                  ),
+//                  SliverToBoxAdapter(
+//                    child: Padding(
+//                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+//                      child: Text(
+//                        'DEBUG: vendor=${vendor?.name}, tables=$numTables, orders=${orders.orders.length}, error=${orders.error}',
+//                        style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
+//                      ),
+//                    ),
+//                  ),
 
                   // ── Table grid ────────────────────────────────
                   if (numTables > 0) ...[
@@ -316,14 +316,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
 
-                  // ── Closed Orders ─────────────────────────────
+                  // ── Completed Orders ─────────────────────────────
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
                       child: Row(
                         children: [
                           Text(
-                            'Closed Orders',
+                            'Completed Orders',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
