@@ -7,14 +7,14 @@ import '../services/api_service.dart';
 class OrdersProvider extends ChangeNotifier {
   List<Order> _tableOrders = [];
   List<Order> _noTableOrders = [];
-  List<Order> _closedOrders = [];
+  List<Order> _completedOrders = [];
   bool _isLoading = false;
   String? _error;
 
   List<Order> get orders => [..._tableOrders, ..._noTableOrders];
   bool get isLoading => _isLoading;
   String? get error => _error;
-  List<Order> get closedOrders => _closedOrders;
+  List<Order> get completedOrders => _completedOrders;
 
   List<Order> ordersForTable(String tableNumber) {
     return _tableOrders
@@ -41,11 +41,11 @@ class OrdersProvider extends ChangeNotifier {
       final results = await Future.wait([
         api.getOrders(vendorId),
         api.getNoTableOrders(vendorId),
-        api.getClosedOrders(vendorId),
+        api.getCompletedOrders(vendorId),
       ]);
       _tableOrders = results[0];
       _noTableOrders = results[1];
-      _closedOrders = results[2];
+      _completedOrders = results[2];
       _isLoading = false;
       notifyListeners();
     } on ApiException catch (e) {
@@ -83,11 +83,11 @@ class OrdersProvider extends ChangeNotifier {
       final updated = await api.updateOrderStatus(vendorId, orderId, status);
       _replaceOrder(updated);
       // If newly closed, move to closed list
-      if (updated.status == OrderStatus.closed) {
+      if (updated.status == OrderStatus.completed) {
         _tableOrders.removeWhere((o) => o.id == orderId);
         _noTableOrders.removeWhere((o) => o.id == orderId);
-        if (!_closedOrders.any((o) => o.id == orderId)) {
-          _closedOrders.insert(0, updated);
+        if (!_completedOrders.any((o) => o.id == orderId)) {
+          _completedOrders.insert(0, updated);
         }
       }
       notifyListeners();
@@ -120,8 +120,8 @@ class OrdersProvider extends ChangeNotifier {
     } else {
       final nIdx = _noTableOrders.indexWhere((o) => o.id == updated.id);
       if (nIdx != -1) _noTableOrders[nIdx] = updated;
-      final cIdx = _closedOrders.indexWhere((o) => o.id == updated.id);
-      if (cIdx != -1) _closedOrders[cIdx] = updated;
+      final cIdx = _completedOrders.indexWhere((o) => o.id == updated.id);
+      if (cIdx != -1) _completedOrders[cIdx] = updated;
     }
     notifyListeners();
   }

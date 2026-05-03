@@ -39,7 +39,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     final vendorId = auth.vendor?.id;
-//    debugPrint('Dashboard: loading orders for vendorId=$vendorId, numberOfTables=${auth.vendor?.numberOfTables}');
+    debugPrint('Dashboard: loading orders for vendorId=$vendorId, numberOfTables=${auth.vendor?.numberOfTables}');
     if (vendorId == null || vendorId.isEmpty) {
       debugPrint('Dashboard: no vendorId available');
       return;
@@ -163,15 +163,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
 
                   // ── Debug info (remove once working) ─────────
- //                 SliverToBoxAdapter(
- //                   child: Padding(
- //                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
- //                     child: Text(
- //                       'DEBUG: vendor=${vendor?.name}, tables=$numTables, orders=${orders.orders.length}, error=${orders.error}',
- //                       style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
- //                     ),
- //                   ),
- //                 ),
+//                  SliverToBoxAdapter(
+//                    child: Padding(
+//                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+//                      child: Text(
+//                        'DEBUG: vendor=${vendor?.name}, tables=$numTables, orders=${orders.orders.length}, error=${orders.error}',
+//                        style: TextStyle(fontSize: 10, color: Colors.orange.shade800),
+//                      ),
+//                    ),
+//                  ),
 
                   // ── Table grid ────────────────────────────────
                   if (numTables > 0) ...[
@@ -329,7 +329,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (orders.completedOrders.isNotEmpty)
+                          if (orders.closedOrders.isNotEmpty)
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 2),
@@ -338,7 +338,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                '${orders.completedOrders.length}',
+                                '${orders.closedOrders.length}',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -351,7 +351,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
 
-                  if (orders.completedOrders.isEmpty)
+                  if (orders.closedOrders.isEmpty)
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -364,7 +364,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            'No completed orders today',
+                            'No closed orders today',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                                 color: theme.colorScheme.onSurfaceVariant),
@@ -378,7 +378,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate(
                           (ctx, index) {
-                            final order = orders.completedOrders[index];
+                            final order = orders.closedOrders[index];
                             return _NoTableOrderCard(
                               order: order,
                               currencyFormat: currencyFormat,
@@ -397,7 +397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               },
                             );
                           },
-                          childCount: orders.completedOrders.length,
+                          childCount: orders.closedOrders.length,
                         ),
                       ),
                     ),

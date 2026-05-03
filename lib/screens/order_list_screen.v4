@@ -33,8 +33,8 @@ class OrderListScreen extends StatelessWidget {
         ? orders.noTableOrders
         : orders.ordersForTable(tableNumber);
 
-    // Also include completed orders for this table so they can be reviewed
-    final completedForTable = orders.completedOrders
+    // Also include closed orders for this table so they can be reviewed
+    final closedForTable = orders.closedOrders
         .where((o) => singleOrderId != null
             ? o.id == singleOrderId
             : o.tableNumber == tableNumber)
@@ -43,10 +43,10 @@ class OrderListScreen extends StatelessWidget {
     if (singleOrderId != null) {
       tableOrders = [
         ...tableOrders.where((o) => o.id == singleOrderId),
-        ...completedForTable,
+        ...closedForTable,
       ];
     } else {
-      tableOrders = [...tableOrders, ...completedForTable];
+      tableOrders = [...tableOrders, ...closedForTable];
     }
 
     return Scaffold(
@@ -350,7 +350,7 @@ class _OrderCard extends StatelessWidget {
     switch (status) {
       case OrderStatus.completed:
         return Colors.green.shade700;
-      case OrderStatus.completed:
+      case OrderStatus.closed:
         return Colors.teal.shade700;
       case OrderStatus.cancelled:
       case OrderStatus.refunded:
@@ -367,7 +367,7 @@ class _OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompleted = order.status == OrderStatus.completed;
+    final isClosed = order.status == OrderStatus.closed;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -375,7 +375,7 @@ class _OrderCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isCompleted
+          color: isClosed
               ? Colors.teal.withOpacity(0.3)
               : order.isEditable
                   ? theme.colorScheme.primary.withOpacity(0.3)
@@ -562,16 +562,16 @@ class _OrderCard extends StatelessWidget {
                         backgroundColor: Colors.teal.shade700),
                   ),
 
-                // Reopen completed order
-                if (isCompleted)
+                // Reopen closed order for review
+                if (isClosed)
                   OutlinedButton.icon(
-                    onPressed: () => onUpdateStatus('comfirmed'),
+                    onPressed: () => onUpdateStatus('completed'),
                     icon: const Icon(Icons.lock_open_outlined, size: 16),
                     label: const Text('Reopen'),
                   ),
 
-                // Cancel — only for non-completed, non-cancelled
-                if (!isCompleted &&
+                // Cancel — only for non-closed, non-cancelled
+                if (!isClosed &&
                     order.status != OrderStatus.cancelled &&
                     order.status != OrderStatus.refunded)
                   OutlinedButton.icon(
